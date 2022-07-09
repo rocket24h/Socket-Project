@@ -155,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="date.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="Header.h" />
     <ClInclude Include="pch.h" />
@@ -175,7 +176,11 @@
     <ResourceCompile Include="Server.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Xml Include="hotel.xml" />
     <Xml Include="temp.xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="hotel.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
