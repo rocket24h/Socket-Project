@@ -5,9 +5,11 @@ struct date
 	int day, month, year;
 };
 const int monthDays[12] = { 31, 59, 90, 120, 151, 181, 212, 243,273, 304, 334, 365 };
-bool checkdate(date d);
-void convertchargdatetoint(char* s, date& d);
 int countNoOfDays(date date1, date date2);
+bool checkdate(date d);
+int countLeapYearDays(date d);
+void convertchargdatetoint(char* s, date &d);
+int distancedate(date d1, date d2);
 date nextday(date d);
 int countLeapYearDays(date d);
 bool checkleapyear(int year);
@@ -95,17 +97,14 @@ void convertchargdatetoint(char* s, date& d)
 	d.month = (s[3] - '0') * 10 + (s[4] - '0');
 	if (s[9] != '\0')
 	{
-		d.year = (s[6] - '0') * 10 * 10 * 10 + (s[7] - '0') * 10 * 10 + (s[8] - '0') * 10 + (s[9] - '0');
 		return;
 	}
 	if (s[8] != '\0')
 	{
-		d.year = (s[6] - '0') * 10 * 10 + (s[7] - '0') * 10 + (s[8] - '0');
 		return;
 	}
 	if (s[7] != '\0')
 	{
-		d.year = (s[6] - '0') * 10 + (s[7] - '0');
 		return;
 	}
 	if (s[6] != '\0')
@@ -114,7 +113,19 @@ void convertchargdatetoint(char* s, date& d)
 		return;
 	}
 }
+int distancedate(date d1, date d2)
+{
+	if (d1.year > d2.year) return -1;
+	if (d1.month > d2.month && d1.year == d2.year) return -1;
+	if (d2.day < d1.day && d2.month == d1.month && d1.year == d2.year) return -1;
 
+	int dateofyear = 0, dateofmonth = 0, date = 0;
+	for (int i = d1.year; i < d2.year; i++)
+	{
+
+	}
+
+}
 void convertdate(date d, char*& s)
 {
 	s = new char[11];
