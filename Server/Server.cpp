@@ -1,7 +1,4 @@
-﻿// Server.cpp : Defines the entry point for the console application.
-//
-
-#include "pch.h"
+﻿#include "pch.h"
 #include "framework.h"
 #include <afxsock.h>
 using namespace std;
@@ -20,18 +17,7 @@ using boost::property_tree::ptree;
 #define new DEBUG_NEW
 #endif
 
-class customer {
-public:
-	string username, password, bankInfo;
 
-	customer() = default;
-	customer(string username, string password, string bankInfo) :username(username), password(password), bankInfo(bankInfo) {}
-};
-
-class hotels {
-public:
-
-};
 
 struct user {
 	char* name = NULL;
@@ -93,122 +79,6 @@ bookingDates* newdate(char* s)
 	temp->next = NULL;
 	return temp;
 }
-void cutstring(char* s, bookingDates*&d)
-{
-	if (strlen(s) != 0)
-	{
-		int i = 0;
-		while (i<strlen(s))
-		{
-			char* c = new char[12];
-			for (int j = 0; j < 10; j++)
-				c[j] = s[i + j];
-			c[10] = '\0';
-			if (d == NULL)
-			{
-				d = newdate(c);
-			}
-			else
-			{
-				bookingDates* temp = d;
-				while (temp->next != NULL)
-				{
-					temp = temp->next;
-				}
-				temp->next = newdate(c);
-			}
-			i = i + 11;
-		}
-		
-	}
-}
-void readfilehotel(room *&list)
-{
-	ifstream in("hotel.txt", ios::in);
-	list = new room[20];
-	int i = 0;
-	if (in.is_open())
-	{
-		while (i<3)
-		{
-			string s;
-			getline(in, s);
-			list[i].name = convertString(s);
-			getline(in, s);
-			list[i].bookedList = convertString(s);
-			cutstring(list[i].bookedList, list[i].book);
-			getline(in, s);
-			list[i].type = convertString(s);
-			getline(in, s);
-			list[i].description = convertString(s);
-			getline(in, s);
-			list[i].price = convertString(s);
-			i++;
-		}
-	}
-	else
-	{
-		cout << "Loi mo file";
-	}
-	in.close();
-	
-	
-}
-user* userList = NULL;
-
-struct bookingDates
-{
-	char* booked = NULL;
-	void add(char* src, char*& dst)
-	{
-		if (dst != NULL) delete[] dst;
-		int size = strlen(src);
-		dst = new char[size + 1];
-		strcpy_s((char*)dst, size + 1, src);
-	}
-	bookingDates* next = NULL;
-};
-struct room
-{
-	char* name = new char[256];
-	char* type = NULL;
-	char* description = NULL;
-	char* bookedList = NULL;
-	char* price = NULL;
-	void add(char* src, char*& dst)
-	{
-		if (dst != NULL) delete[] dst;
-		int size = strlen(src);
-		dst = new char[size + 1];
-		strcpy_s((char*)dst, size + 1, src);
-	}
-	bookingDates* book = NULL;
-
-};
-
-room* list = NULL;
-
-char* convertString(string str);
-struct hotel
-{
-	char* name;
-	void add(char* src, char*& dst)
-	{
-		if (dst != NULL) delete[] dst;
-		int size = strlen(src);
-		dst = new char[size + 1];
-		strcpy_s((char*)dst, size + 1, src);
-	}
-	room roomList[20] = {};
-};
-
-bookingDates* newdate(char* s)
-{
-	bookingDates* temp = new bookingDates;
-	temp->booked = s;
-	temp->next = NULL;
-	return temp;
-}
 void cutstring(char* s, bookingDates*& d)
 {
 	if (strlen(s) != 0)
@@ -238,6 +108,69 @@ void cutstring(char* s, bookingDates*& d)
 
 	}
 }
+void readHotelData(const char* hotelname, room*&list)
+{
+	ptree pt;
+	read_xml(hotelname, pt);
+	list = new room[20];
+	int i = 0;
+	BOOST_FOREACH(ptree::value_type & child, pt.get_child("programData.hoteldata"))
+	{
+		string temp = child.second.get<string>("name");
+		char* name = convertString(temp);
+		//cout << name << endl;
+		temp = child.second.get<string>("type");
+		char* type = convertString(temp);
+		//cout << type << endl;
+		temp = child.second.get<string>("date");
+		char* date = convertString(temp);
+		//cout << date << endl;
+		temp = child.second.get<string>("description");
+		char* description = convertString(temp);
+		//cout << description << endl;
+		temp = child.second.get<string>("price");
+		char* price = convertString(temp);
+		//cout << price << endl;
+		list[i].name = name;
+		list[i].bookedList = date;
+		cutstring(list[i].bookedList, list[i].book);
+		list[i].type = type;
+		list[i].description = description;
+		list[i].price = price;
+		i++;
+	}
+	/*
+	ifstream in("hotel.txt", ios::in);
+	list = new room[20];
+	int i = 0;
+	if (in.is_open())
+	{
+		while (i < 3)
+		{
+			string s;
+			getline(in, s);
+			list[i].name = convertString(s);
+			getline(in, s);
+			list[i].bookedList = convertString(s);
+			cutstring(list[i].bookedList, list[i].book);
+			getline(in, s);
+			list[i].type = convertString(s);
+			getline(in, s);
+			list[i].description = convertString(s);
+			getline(in, s);
+			list[i].price = convertString(s);
+			i++;
+		}
+	}
+	else
+	{
+		cout << "Loi mo file";
+	}
+	in.close();
+	*/
+
+}
+user* userList = NULL;
 
 user* createData(char* name, char* password, char* STK)
 {
@@ -306,41 +239,7 @@ char* convertString(string str) {
 	return obj;
 }
 
-void readfilehotel(const char* hotelname, room*& list)
-{
-
-	/*
-	ifstream in("hotel.txt", ios::in);
-	list = new room[20];
-	int i = 0;
-	if (in.is_open())
-	{
-		while (i < 3)
-		{
-			string s;
-			getline(in, s);
-			list[i].name = convertString(s);
-			getline(in, s);
-			list[i].bookedList = convertString(s);
-			cutstring(list[i].bookedList, list[i].book);
-			getline(in, s);
-			list[i].type = convertString(s);
-			getline(in, s);
-			list[i].description = convertString(s);
-			getline(in, s);
-			list[i].price = convertString(s);
-			i++;
-		}
-	}
-	else
-	{
-		cout << "Loi mo file";
-	}
-	in.close();
-	*/
-}
-
-void readFile(const char* filename, user*& first)
+void readUserData(const char* filename, user*& first)
 {
 	ptree pt;
 	read_xml(filename, pt);
@@ -385,6 +284,24 @@ user* loginConfirm(user* first, char* name, char* pass) {
 	return NULL;
 }
 
+void writeUserData(const char* filename, user* first)
+{
+	ptree pt, ptChild;
+	if (first == NULL) return;
+	user* temp = first;
+	while (temp != NULL)
+	{
+		ptChild.add("name", temp->name);
+		ptChild.add("password", temp->name);
+		ptChild.add("bankInfo", temp->STK);
+		pt.add_child("programData.userData", ptChild);
+		ptChild.clear();
+		temp = temp->next;
+	}
+
+	write_xml(filename, pt);
+}
+
 // The one and only application object
 
 
@@ -395,21 +312,22 @@ DWORD WINAPI function_cal(LPVOID arg) {
 	int TTL = 1000;
 	int number_continue = 1;
 	cout << "Da co mot client ket noi!" << endl;
-	user user1;
+	user* user1 = new user;
 	user* trueUser = NULL;
-	int fetures;
+	int features;
 	int flag;
-	int feturesSwitch = 0;
+	int featuresSwitch = 0;
 	room* list;
-	readfilehotel(list);
-	readFile("temp.xml", userList);
+	char* hotelname;
+	readHotelData("hotel.xml", list);
+	readUserData("temp.xml", userList);
 	do {
-		client.Receive((char*)&fetures, sizeof(int), 0);
-		switch (fetures) {
+		client.Receive((char*)&features, sizeof(int), 0);
+		switch (features) {
 		case 0:
-			if (feturesSwitch == 0) 
+			if (featuresSwitch == 0)
 			{
-				
+
 				TTL++;
 				flag = 1;
 				while (flag <= 3) {
@@ -439,27 +357,46 @@ DWORD WINAPI function_cal(LPVOID arg) {
 						client.Send(&checker, sizeof(checker), 0);
 					}
 					switch (flag) {
-					case 1: user1.add(buffer, user1.name); // Phần này đáng ra phải có 1 hàm đọc xml rồi so sánh với cái username mà mình nhận được ổn thì mới cho cái flag di chuyển tiếp không thì báo lại cho bên client là userName có người xài rồi gửi lại đi
-						printf("%s \n", user1.name);
+					case 1: user1->add(buffer, user1->name); // Phần này đáng ra phải có 1 hàm đọc xml rồi so sánh với cái username mà mình nhận được ổn thì mới cho cái flag di chuyển tiếp không thì báo lại cho bên client là userName có người xài rồi gửi lại đi
+						printf("%s \n", user1->name);
 						break;
-					case 2:user1.add(buffer, user1.password);
-						printf("%s \n", user1.password);
+					case 2:user1->add(buffer, user1->password);
+						printf("%s \n", user1->password);
 						break;
-					case 3:user1.add(buffer, user1.STK);
-						printf("%s \n", user1.STK);
+					case 3:user1->add(buffer, user1->STK);
+						printf("%s \n", user1->STK);
 					default: break;
 					}
 					flag++;
 					
 				}
+				insertData(userList, createData(user1->name, user1->password, user1->STK));
+				writeUserData("userData.xml", userList);
 			}
 			else
 			{
+				//Chuc nang tra cuu
 				TTL++;
 				{
-					
 					int size = 0;
 					int tempSize = 10;
+					/*
+					char* tempStr;
+					client.Receive((char*)&size, sizeof(int), 0);
+					if (size == 0) {
+						return 0;
+					}
+					cout << size << endl;
+					tempStr = new char[size + 1];
+					for (int i = 0; i < size; i = i + tempSize) {
+						if (i + tempSize >= size) {
+							tempSize = size - i;
+						}
+						client.Receive((char*)&tempStr[i], tempSize, 0);
+					}
+					cout << tempStr << endl;
+					readHotelData(tempStr, list);
+					*/
 					char* buffer;
 					client.Receive((char*)&size, sizeof(int), 0);
 					if (size == 0) {
@@ -471,10 +408,9 @@ DWORD WINAPI function_cal(LPVOID arg) {
 							tempSize = size - i;
 						}
 						client.Receive((char*)&buffer[i], tempSize, 0);
-						
 					}
 					buffer[size] = '\0';
-					
+
 					char* buffer2;
 					client.Receive((char*)&size, sizeof(int), 0);
 					if (size == 0) {
@@ -488,17 +424,17 @@ DWORD WINAPI function_cal(LPVOID arg) {
 						client.Receive((char*)&buffer2[i], tempSize, 0);
 					}
 					buffer2[size] = '\0';
-					
+
 					char* t = buffer;
-					
-					int a[4] = { 0 };
+
+					int a[10] = { 0 };
 					date d1, d2;
 					convertchargdatetoint(buffer, d1);
 					convertchargdatetoint(buffer2, d2);
-					for (int j=0;j<=countNoOfDays(d1,d2);j++)
+					for (int j = 0; j <= countNoOfDays(d1, d2); j++)
 					{
-						
-						for (int i = 0; i < 3; i++)
+
+						for (int i = 0; i < 10; i++)
 						{
 							bookingDates* temp = list[i].book;
 
@@ -507,7 +443,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 
 								while (temp != NULL)
 								{
-									if (strcmp(temp->booked, t)==0)
+									if (strcmp(temp->booked, t) == 0)
 									{
 										a[i]++;
 										break;
@@ -515,40 +451,42 @@ DWORD WINAPI function_cal(LPVOID arg) {
 									temp = temp->next;
 								}
 							}
-							
 						}
 						date d;
-						
+
 						convertchargdatetoint(t, d);
 						d = nextday(d);
 						convertdate(d, t);
 					}
 					int c = 0;
-					for (int i = 0; i < 3; i++)
+					for (int i = 0; i < 10; i++)
 					{
 						if (a[i] == 0) c++;
-						
 					}
-					
+
 					client.Send(&c, sizeof(c), 0);
-					
-					for (int i = 0; i < 3; i++)
+
+					for (int i = 0; i < 10; i++)
 					{
 						if (a[i] == 0)
 						{
+							size = strlen(list[i].name);
+							client.Send(&size, sizeof(size), 0);
+							client.Send(list[i].name, size, 0);
+							cout << "Phong       : " << list[i].name << endl;
 							size = strlen(list[i].type);
 							client.Send(&size, sizeof(size), 0);
 							client.Send(list[i].type, size, 0);
-							cout << list[i].type;
+							cout << "Loai phong  : " << list[i].type << endl;
 							size = strlen(list[i].description);
 							client.Send(&size, sizeof(size), 0);
 							client.Send(list[i].description, size, 0);
-							cout << list[i].description;
+							cout << "Mo ta phong : \n" << list[i].description << endl;
 							size = strlen(list[i].price);
 							client.Send(&size, sizeof(size), 0);
 							client.Send(list[i].price, size, 0);
-							cout << list[i].price;
-							cout << endl;
+							cout << "Gia tien    : " << list[i].price << endl;
+							cout << endl << "/////////////////////////////////" << endl;;
 						}
 					}
 
@@ -558,7 +496,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 		case 1:
 			TTL++;
 			flag = 1;
-			
+
 			while (flag <= 2) {
 				int size = 0;
 				int tempSize = 10;
@@ -576,29 +514,29 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				}
 				buffer[size] = '\0';
 				switch (flag) {
-				case 1: user1.add(buffer, user1.name);
-					printf("%s \n", user1.name);
+				case 1: user1->add(buffer, user1->name);
+					printf("%s \n", user1->name);
 					break;
-				case 2:user1.add(buffer, user1.password);
-					printf("%s \n", user1.password);
+				case 2:user1->add(buffer, user1->password);
+					printf("%s \n", user1->password);
 					break;
 				default: break;
 				}
 				flag++;
 			}
-			trueUser = loginConfirm(userList, user1.name, user1.password);
+			trueUser = loginConfirm(userList, user1->name, user1->password);
 			if (trueUser == NULL) {
 				bool checker = 0;
 				client.Send(&checker, sizeof(bool), 0);
 			}
 			else {
 				bool checker = 1;
-				feturesSwitch = 1;
+				featuresSwitch = 1;
 				client.Send(&checker, sizeof(bool), 0);
 			}
 			break;
-		
-		break;
+
+			break;
 		default:
 			break;
 		}
@@ -619,13 +557,12 @@ using namespace std;
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
 
-	const char* hotelname = "hotel.xml";
-	readFile("temp.xml", userList);
-	readfilehotel(hotelname, list);
+	//readUserData("temp.xml", userList);
+	
 	//cout << userList->name << "/" << userList->password << "/" << userList->STK << endl;
 	//testClientOutput(userList);
 	room* list;
-	
+
 	int nRetCode = 0;
 	HMODULE hModule = ::GetModuleHandle(NULL);
 	// initialize MFC and print and error on failure
@@ -647,7 +584,7 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 			HANDLE threadStatus;
 			main.Create(1234);
 			printf("Server lang nghe ket noi tu client\n");
-			
+
 			do {
 				main.Listen();
 				main.Accept(client);
@@ -666,5 +603,6 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 		_tprintf(_T("Fatal Error: GetModuleHandle failed\n"));
 		nRetCode = 1;
 	}
+	
 	return nRetCode;
 }
