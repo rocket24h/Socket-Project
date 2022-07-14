@@ -409,7 +409,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				}
 				buffer2 = new char[size + 1];
 				for (int i = 0; i < size; i = i + tempSize) {
-					if (i + tempSize >= size) {
+					if (i + tempSize >= size) { 
 						tempSize = size - i;
 					}
 					client.Receive((char*)&buffer2[i], tempSize, 0);
@@ -449,6 +449,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					if (a[i] == 0) c++;
 				}
 				client.Send(&c, sizeof(c), 0);
+				
 				for (int i = 0; i < 10; i++) {
 					if (a[i] == 0) {
 						size = strlen(list[i].name);
@@ -474,20 +475,13 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				cout << type << endl;
 				imageToSent[0].readImageFile("photo\\hotelOne\\single\\phongNgu.jpeg");
 				imageToSent[1].readImageFile("photo\\hotelOne\\single\\phongKhach.jpeg");
-				imageToSent[2].readImageFile("photo\\hotelOne\\double\\phongTam.jpeg");
+				imageToSent[2].readImageFile("photo\\hotelOne\\single\\phongTam.jpg");
 				flag = 1;
 				for (int i = 0; i < 3; i++) {
-					client.Send(&imageToSent[i].height, sizeof(int), 0);
-					client.Send(&imageToSent[i].width, sizeof(int), 0);
 					imencode(".jpg", imageToSent[i].data, dataStorage);
 					size = dataStorage.size();
 					client.Send(&size, sizeof(int), 0);
 					client.Send(&dataStorage[0], size, 0);
-					while (flag != 0) {
-						client.Receive(&flag, sizeof(int), 0);
-					}
-					dataStorage.clear();
-					flag = 1;
 				}
 				break;
 			}
@@ -537,6 +531,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 			}
 			else {
 				// Phan code cho dat phong
+				cout << "hello" << endl;
 			}
 			break;
 		case 3:
@@ -595,7 +590,6 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 			HANDLE threadStatus;
 			main.Create(1234);
 			printf("Server lang nghe ket noi tu client\n");
-
 			do {
 				main.Listen();
 				main.Accept(client);
