@@ -1,33 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <programData>
     <userData>
-        <name>rocket24h</name>
-        <password>rocket24h</password>
-        <bankInfo>69420</bankInfo>
-    </userData>
-    <userData>
-        <name>Uruna</name>
-        <password>Uruna</password>
-        <bankInfo>12345</bankInfo>
-    </userData>
-    <userData>
-        <name>DGH</name>
-        <password>DGH</password>
-        <bankInfo>12345</bankInfo>
-    </userData>
-    <userData>
-        <name>mf</name>
-        <password>mf</password>
-        <bankInfo>12345</bankInfo>
-    </userData>
-    <userData>
-        <name>DGH</name>
-        <password>DGH</password>
-        <bankInfo>12345</bankInfo>
-    </userData>
-    <userData>
-        <name>rocket25h</name>
-        <password>rocket25h</password>
-        <bankInfo>1234567890</bankInfo>
+        <user>
+            <username>rocket24h</username>
+            <password>wassup</password>
+            <bankInfo>69420</bankInfo>
+        </user>
+        <user>
+            <username>Uruna</username>
+            <password>1234</password>
+            <bankInfo>12345</bankInfo>
+        </user>
+        <user>
+            <username>DGH</username>
+            <password>1234</password>
+            <bankInfo>12345</bankInfo>
+        </user>
+        <user>
+            <username>mf</username>
+            <password>1234</password>
+            <bankInfo>12345</bankInfo>
+        </user>
+        <user>
+            <username>rocket25h</username>
+            <password>1234</password>
+            <bankInfo>12345</bankInfo>
+        </user>
     </userData>
 </programData>
