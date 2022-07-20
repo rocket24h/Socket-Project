@@ -17,6 +17,7 @@ using namespace cv;
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <string>
 #include <time.h>
 #include <sstream>
 #include "date.h"
@@ -25,6 +26,7 @@ using namespace cv;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
+
 
 struct user {
 	char* name = NULL;
@@ -86,40 +88,57 @@ struct room {
 	char* thirdPhoto = NULL;
 };
 
-struct subBill {
-	char* nameRoom = NULL;
-	//int category;
-	subBill* next = NULL;
-};
-
-subBill* createSubBill(char* nameRoom)
-{
-	subBill* b = new subBill;
-	b->nameRoom = nameRoom;
-	b->next = NULL;
-	return b;
-}
-
-void insertSubBill(subBill*&first, subBill* sub)
-{
-	if (first == NULL) first = sub;
-	subBill* temp = first;
-	while (temp->next != NULL)
-	{
-		temp = temp->next;
-	}
-	temp->next = sub;
-}
-
 struct bill {
+	void add(char* src, char*& dst) {
+		if (dst != NULL) delete[] dst;
+		int size = strlen(src);
+		if (size == 0) return;
+		dst = new char[size + 1];
+		strcpy_s((char*)dst, size + 1, src);
+	}
+	char* billID = NULL;
 	char* nameHotel = NULL;
-	subBill* list = NULL;
+	char* list = NULL;
 	char* dateIn = NULL;
 	char* dateOut = NULL;
 	char* GhiChu = NULL;
 	int giaTien = 0;
+	int TTL = 0;
+	bill* next;
 };
 
+bill* createBill(char* billID, char* name, char* list, char* dateIn, char* dateOut, char* note, int price, int TTL)
+{
+	bill* b = new bill;
+	b->billID = billID;
+	b->nameHotel = name;
+	b->list = list;
+	b->dateIn = dateIn;
+	b->dateOut = dateOut;
+	b->GhiChu = note;
+	b->giaTien = price;
+	b->TTL = TTL;
+	b->next = NULL;
+	return b;
+}
+
+void insertBill(bill*& first, bill* b)
+{
+	if (first == NULL)
+	{
+		first = b;
+		return;
+	}
+	else
+	{
+		bill* temp = first;
+		while (temp->next != NULL)
+		{
+			temp = temp->next;
+		}
+		temp->next = b;
+	}
+}
 void strCat(char*& dest, const char* src)
 {
 	if (dest == NULL)
@@ -138,49 +157,38 @@ void strCat(char*& dest, const char* src)
 	}
 }
 
-void writeBillData(bill* userBill, const char* filename, char* extraLine)
+void writeBillData(bill* userBill, const char* filename)
 {
 	ptree pt, ptChild;
 	if (userBill == NULL) return;
 	bill* tempBill = userBill;
-	//subBill* tempSubBill = userBill->list;
-	//if (tempSubBill == NULL) return;
-
-	ptChild.add("hotelName", tempBill->nameHotel);
-	ptChild.add("dateIn", tempBill->dateIn);
-	ptChild.add("dateOut", tempBill->dateOut);
-	ptChild.add("notes", tempBill->GhiChu);
-	ptChild.add("price", tempBill->giaTien);
-	ptChild.add("subBill", extraLine);
-	pt.add_child("programData.billData", ptChild);
-	ptChild.clear();
+	while (tempBill != NULL)
+	{
+		ptChild.add("billID", tempBill->billID);
+		ptChild.add("hotelName", tempBill->nameHotel);
+		ptChild.add("dateIn", tempBill->dateIn);
+		ptChild.add("dateOut", tempBill->dateOut);
+		ptChild.add("notes", tempBill->GhiChu);
+		ptChild.add("price", tempBill->giaTien);
+		ptChild.add("subBill", tempBill->list);
+		ptChild.add("TTL", tempBill->TTL);
+		pt.add_child("programData.billData", ptChild);
+		ptChild.clear();
+		tempBill = tempBill->next;
+	}
 	write_xml(filename, pt);
 }
 
 char* convertString(string str);
-//Phần này đọc bill nhưng mà tui parse string bị cm gì không biết nữa, ông xem giúp tui, hiện tại cái đống phòng tui chỉ mới đọc được char* thôi chứ chưa lưu vào subBill
-/*
-void handleSubBill(char* bookedRooms, subBill*&dest)
-{
-	char* token = NULL, *nextToken = NULL;
-	token = strtok_s(bookedRooms, " ", &nextToken);
-	while (token != NULL)
-	{
-		cout << token << endl;
-		insertSubBill(dest, createSubBill(token));
-		cout << dest->nameRoom << endl;
-		token = strtok_s(NULL, " ", &nextToken);
-	}
-}
-*/
-void readBillData(bill*& userBill, const char* filename)
+void readBillData(bill*& userBill, const char* filename, int& billCount)
 {
 	ptree pt;
 	string temp;
-	if (userBill == NULL) userBill = new bill;
 	read_xml(filename, pt);
 	BOOST_FOREACH(ptree::value_type & child, pt.get_child("programData"))
 	{
+		temp = child.second.get<string>("billID");
+		char* billID = convertString(temp);
 		temp = child.second.get<string>("hotelName");
 		char* name = convertString(temp);
 		//cout << name << endl;
@@ -193,18 +201,13 @@ void readBillData(bill*& userBill, const char* filename)
 		temp = child.second.get<string>("notes");
 		char* notes = convertString(temp);
 		//cout << description << endl;
-		temp = child.second.get<string>("price");
-		string price = temp;
+		int price = child.second.get<int>("price");
 		temp = child.second.get<string>("subBill");
 		char* bookedRooms = convertString(temp);
-		cout << bookedRooms << endl;
-		userBill->nameHotel = name;
-		userBill->dateIn = dateIn;
-		userBill->dateOut = dateOut;
-		userBill->GhiChu = notes;
-		userBill->giaTien = stoi(price);
-		handleSubBill(bookedRooms, userBill->list);
-
+		int TTL = child.second.get<int>("TTL");
+		//cout << bookedRooms << endl;
+		billCount++;
+		insertBill(userBill, createBill(billID, name, bookedRooms, dateIn, dateOut, notes, price, TTL));
 	}
 }
 
@@ -253,11 +256,6 @@ void cutstring(char* s, bookingDates*& d)
 	}
 }
 
-int billID()
-{
-	return 1000 + rand() % 9000;
-}
-
 void readHotelData(const char* hotelname, room*& list)
 {
 	ptree pt;
@@ -293,50 +291,10 @@ void readHotelData(const char* hotelname, room*& list)
 		list[i].type = type;
 		list[i].description = description;
 		list[i].price = price;
-		list[i].firstPhoto= firstPhoto;
+		list[i].firstPhoto = firstPhoto;
 		list[i].secondPhoto = secondPhoto;
 		list[i].thirdPhoto = thirdPhoto;
 		i++;
-	}
-
-	/*
-	ifstream in("hotel.txt", ios::in);
-	list = new room[20];
-	int i = 0;
-	if (in.is_open())
-	{
-		while (i < 10)
-		{
-			string s;
-			getline(in, s);
-			list[i].name = convertString(s);
-
-			getline(in, s);
-			list[i].bookedList = convertString(s);
-			cutstring(list[i].bookedList, list[i].book);
-			getline(in, s);
-			list[i].type = convertString(s);
-
-			getline(in, s);
-			list[i].description = convertString(s);
-			getline(in, s);
-			list[i].price = convertString(s);
-			i++;
-		}
-	}
-	else
-	{
-		cout << "Loi mo file";
-	}
-	in.close();
-	*/
-}
-
-void freeHotelMemory(room*& list)
-{
-	for (int i = 0; i < 10; i++)
-	{
-		delete[] & list[i];
 	}
 }
 
@@ -350,6 +308,16 @@ int inttype(char* s)
 }
 
 user* userList = NULL;
+
+int findRoomByName(room* list, char* nameRoom, int size, room& trueRoom) {
+	for (int i = 0; i < size; i++) {
+		if (strcmp(list[i].name, nameRoom) == 0) {
+			trueRoom = list[i];
+			return 1;
+		}
+	}
+	return 0;
+}
 
 user* createData(char* name, char* password, char* STK)
 {
@@ -511,11 +479,8 @@ void writeUserData(const char* filename, user* first)
 
 void writeHotelData(const char* filename, room* roomList)
 {
-	
 	ptree pt, ptChild;
 	if (roomList == NULL) return;
-	//if (roomList->bookedList = NULL) return;
-	//char* booked = NULL;
 	for (int i = 0; i < 10; i++)
 	{
 		ptChild.add("name", roomList[i].name);
@@ -532,7 +497,7 @@ void writeHotelData(const char* filename, room* roomList)
 	write_xml(filename, pt);
 }
 
-void addtail(bookingDates*&pHead, char* x)
+void addtail(bookingDates*& pHead, char* x)
 {
 	if (pHead == NULL)
 	{
@@ -548,6 +513,7 @@ void addtail(bookingDates*&pHead, char* x)
 		temp->next = newdate(x);
 	}
 }
+
 
 // The one and only application object
 DWORD WINAPI function_cal(LPVOID arg) {
@@ -709,28 +675,34 @@ DWORD WINAPI function_cal(LPVOID arg) {
 						size = strlen(list[i].name);
 						client.Send(&size, sizeof(size), 0);
 						client.Send(list[i].name, size, 0);
-						cout << "Phong       : " << list[i].name << endl;
 						size = strlen(list[i].type);
 						client.Send(&size, sizeof(size), 0);
 						client.Send(list[i].type, size, 0);
-						cout << "Loai phong  : " << list[i].type << endl;
 						size = strlen(list[i].description);
 						client.Send(&size, sizeof(size), 0);
 						client.Send(list[i].description, size, 0);
-						cout << "Mo ta phong : \n" << list[i].description << endl;
 						size = strlen(list[i].price);
 						client.Send(&size, sizeof(size), 0);
 						client.Send(list[i].price, size, 0);
-						cout << "Gia tien    : " << list[i].price << endl;
-						cout << endl << "/////////////////////////////////" << endl;;
 					}
 				}
-				int type = 0;
-				//writeHotelData(hotelFile, list);
-				client.Receive((char*)&type, sizeof(int), 0);
-				cout << type << endl;
-				imageToSent[0].readImageFile("photo\\hotelOne\\single\\phongNgu.jpeg");
-				imageToSent[1].readImageFile("photo\\hotelOne\\single\\phongKhach.jpeg");
+				int flag = 0;
+				char* nameRoom = NULL;
+				room trueRoom;
+				client.Receive((char*)&size, sizeof(int), 0);
+				cout << size << endl;
+				nameRoom = new char[size + 1];
+				client.Receive((char*)&nameRoom[0], size, 0);
+				nameRoom[size] = '\0';
+				cout << nameRoom << endl;
+				flag = findRoomByName(list, nameRoom, 10, trueRoom);
+				client.Send(&flag, sizeof(flag), 0);
+				if (flag == 0) {
+					cout << "Phong tren khong tai \n";
+					break;
+				}
+				imageToSent[0].readImageFile(trueRoom.firstPhoto);
+				imageToSent[1].readImageFile(trueRoom.secondPhoto);
 				imageToSent[2].readImageFile("photo\\hotelOne\\single\\phongTam.jpg");
 				flag = 1;
 				for (int i = 0; i < 3; i++) {
@@ -740,11 +712,8 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					client.Send(&dataStorage[0], size, 0);
 				}
 				break;
-				//writeHotelData(hotelFile, list);
-				//freeHotelMemory(list);
 			}
 			//viet ham delete room list;
-
 			break;
 		case 1:
 			TTL++;
@@ -791,13 +760,18 @@ DWORD WINAPI function_cal(LPVOID arg) {
 			}
 			else {
 				// Phan code cho dat phong
+				bill* totalBill = NULL;
 				room* list = NULL;
-
-				int size = 0;
+				int size = 0, billCount = 0;
 				int tempSize = 10;
-				char* buffer = NULL, * hotelFile = NULL, *hotelName = NULL;
+				char* buffer = NULL, * hotelFile = NULL, * hotelName = NULL;
 				int typeroom;
 				bill hoadon;
+				char* billFile = NULL;
+				strCat(billFile, user1->name);
+				upperCase(billFile);
+				strCat(billFile, ".xml");
+				readBillData(totalBill, billFile, billCount);
 
 				client.Receive((char*)&size, sizeof(int), 0);
 				if (size == 0) {
@@ -816,7 +790,6 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				hotelFile = mergeCharStr(hotelFile, ".xml");
 				cout << hotelFile << endl;
 				readHotelData(hotelFile, list);
-
 				client.Receive((char*)&typeroom, sizeof(int), 0);
 				if (typeroom == 0) {
 					break;
@@ -872,7 +845,6 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				date d1, d2;
 				const char* sing = "single";
 				const char* doub = "double";
-
 				convertchargdatetoint(buffer, d1);
 				convertchargdatetoint(buffer2, d2);
 				int diseday = countNoOfDays(d1, d2);
@@ -918,33 +890,28 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					{
 						size = strlen(list[i].name);
 						client.Send(&size, sizeof(size), 0);
-						client.Send(list[i].name, size, 0);
-						cout << "Phong       : " << list[i].name << endl;
+						client.Send(&list[i].name[0], size, 0);
 						size = strlen(list[i].type);
 						client.Send(&size, sizeof(size), 0);
-						client.Send(list[i].type, size, 0);
-						cout << "Loai phong  : " << list[i].type << endl;
+						client.Send(&list[i].type[0], size, 0);
 						size = strlen(list[i].description);
 						client.Send(&size, sizeof(size), 0);
-						client.Send(list[i].description, size, 0);
-						cout << "Mo ta phong : \n" << list[i].description << endl;
+						client.Send(&list[i].description[0], size, 0);
 						size = strlen(list[i].price);
 						client.Send(&size, sizeof(size), 0);
-						client.Send(list[i].price, size, 0);
-						cout << "Gia tien    : " << list[i].price << endl;
-						cout << endl << "/////////////////////////////////" << endl;;
+						client.Send(&list[i].price[0], size, 0);
 					}
 				}
 				int numroom;
 				client.Receive((char*)&numroom, sizeof(int), 0);
 				cout << numroom << endl;
-				subBill* roombook = new subBill[numroom];
 				int* listroom = new int[numroom];
 				long int tien = 0;
 				long int priceroom;
 				char* bookedRooms = NULL;
-				int userBillID = billID();
-				string billFile;
+				billCount += 1;
+				char* userBillID = new char[100];
+				_itoa(billCount, userBillID, 10);
 				if (numroom == 0)
 				{
 					cout << "Khach hang khong dat phong\n";
@@ -956,9 +923,9 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					{
 						client.Receive((char*)&listroom[i], sizeof(size), 0);
 						cout << listroom[i];
-						roombook[i].nameRoom = list[listroom[i]].name;
+						strCat(hoadon.list, list[listroom[i]].name);
+						strCat(hoadon.list, " ");
 						cout << list[listroom[i]].name << " ";
-						//roombook[i].category = inttype(list[listroom[i]].type);
 						char* temp = buffer;
 						int lenb = strlen(buffer);
 						for (int j = 0; j <= countNoOfDays(d1, d2); j++)
@@ -980,31 +947,106 @@ DWORD WINAPI function_cal(LPVOID arg) {
 								list[listroom[i]].bookedList = temp;
 							}
 						}
-						//printList(list[listroom[i]].book);
 						priceroom = atoi(list[listroom[i]].price);
 						tien = (diseday + 1) * priceroom + tien;
-						strCat(bookedRooms, roombook[i].nameRoom);
-						strCat(bookedRooms, " ");
-						//insertSubBill(roomList, &roombook[i]);
-						//cout << priceroom << " " << diseday << " " << tien<<endl;
 					}
-					hoadon.giaTien = tien;
-					client.Send(&userBillID, sizeof(size), 0);
-					billFile = to_string(userBillID);
-					billFile += ".xml";
+					char* tempID = user1->name;
+					strCat(tempID, "_");
+					strCat(tempID, userBillID);
+					int tempSz = strlen(tempID);
+					client.Send(&tempSz, sizeof(tempSz), 0);
+					client.Send(tempID, tempSz, 0);
 					client.Send(&tien, sizeof(size), 0);
+					int tTL = timeTL();
+					bill* tmpbill = createBill(tempID, hotelName, hoadon.list, hoadon.dateIn, hoadon.dateOut, note, tien, tTL);
+					cout << tmpbill->billID << " " << tmpbill->nameHotel << " " << tmpbill->list << " " << tmpbill->dateIn << " " << tmpbill->dateOut << " " << tmpbill->GhiChu << " " << tmpbill->giaTien << endl;
+					insertBill(totalBill, tmpbill);
 				}
 				cout << "Tien phong da dat " << tien;
-				
-				
-				/*
-				char* billFile = user1->name;
-				upperCase(billFile);
-				strCat(billFile, ".xml");
-				*/
-				cout << billFile << endl;
-				writeBillData(&hoadon, billFile.c_str(), bookedRooms);
+				writeBillData(totalBill, billFile);
 				writeHotelData(hotelFile, list);
+			}
+			break;
+		case 2:
+			if (featuresSwitch != 0) {
+				int size = 0;
+				int billcount = 0;
+				int flag = 0;
+				room* list = NULL;
+				bill* userBill = NULL;
+				int currentBillIndex = -1;
+				char* tempName = NULL;
+				size = strlen(trueUser->name);
+				tempName = new char[size + 1];
+				strcpy_s(tempName, size + 1, trueUser->name);
+				upperCase(tempName);
+				strCat(tempName, ".xml");
+				cout << tempName << endl;
+				readBillData(userBill, tempName, billcount);
+				char* billID = NULL;
+				client.Receive((char*)&size, sizeof(int), 0);
+				if (size == 0) break;
+				client.Receive((char*)&billID, size, 0);
+				for (int i = 0; i < billcount; i++) {
+					if (strcmp(userBill[i].billID, billID) == 0) {
+						currentBillIndex == i;
+						break;
+					}
+				}
+				if (currentBillIndex == -1) {
+					client.Send(&flag, sizeof(flag), 0);
+				}
+				else {
+					flag = 1;
+					client.Send(&flag, sizeof(flag), 0);
+					if (timeTL() - userBill[currentBillIndex].TTL >= 24 * 3600) {
+						flag = 0;
+						client.Send(&flag, sizeof(flag), 0);
+					}
+					else {
+						readHotelData(userBill[currentBillIndex].nameHotel, list);
+						date d1, d2;
+						char doub[] = "double";
+						char sing[] = "single";
+						convertchargdatetoint(userBill[currentBillIndex].dateIn, d1);
+						convertchargdatetoint(userBill[currentBillIndex].dateOut, d2);
+						int diseday = countNoOfDays(d1, d2);
+						for (int j = 0; j <= countNoOfDays(d1, d2); j++)
+						{
+							for (int i = 0; i < 10; i++) {
+								bookingDates* temp = list[i].book;
+								if (temp != NULL)
+								{
+									while (temp != NULL)
+									{
+										if (strcmp(temp->booked, userBill[currentBillIndex].dateIn) == 0)
+										{
+											list[i].sameday--;
+											break;
+										}
+										temp = temp->next;
+									}
+								}
+							}
+							date d;
+							convertchargdatetoint(userBill[currentBillIndex].dateIn, d);
+							d = nextday(d);
+							convertdate(d, userBill[currentBillIndex].dateIn);
+						}
+						for (int i = currentBillIndex; i < billcount - 1; i++) {
+							userBill[i].nameHotel = userBill[i + 1].nameHotel;
+							userBill[i].billID = userBill[i + 1].billID;
+							userBill[i].GhiChu = userBill[i + 1].GhiChu;
+							userBill[i].giaTien = userBill[i + 1].giaTien;
+							userBill[i].TTL = userBill[i + 1].TTL;
+							userBill[i].next = userBill[i + 1].next;
+							userBill[i].dateIn = userBill[i + 1].dateIn;
+							userBill[i].dateOut = userBill[i + 1].dateOut;
+						}
+						billcount--;
+						writeBillData(userBill, tempName);
+					}
+				}
 			}
 			break;
 		case 3:
@@ -1035,14 +1077,6 @@ using namespace std;
 
 int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 {
-
-	//readUserData("temp.xml", userList);
-
-	//cout << userList->name << "/" << userList->password << "/" << userList->STK << endl;
-	//testClientOutput(userList);
-	srand(time(NULL));
-
-	
 	room* list;
 	int nRetCode = 0;
 	HMODULE hModule = ::GetModuleHandle(NULL);
@@ -1086,5 +1120,5 @@ int _tmain(int argc, TCHAR* argv[], TCHAR* envp[])
 	}
 
 	return nRetCode;
-	
+
 }
