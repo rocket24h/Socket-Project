@@ -415,7 +415,7 @@ void readUserData(const char* filename, user*& first)
 	read_xml(filename, pt);
 	BOOST_FOREACH(ptree::value_type & child, pt.get_child("programData.userData"))
 	{
-		string temp = child.second.get<string>("username");
+		string temp = child.second.get<string>("name");
 		char* name = convertString(temp);
 		temp = child.second.get<string>("password");
 		char* password = convertString(temp);
@@ -468,7 +468,7 @@ void writeUserData(const char* filename, user* first)
 	while (temp != NULL)
 	{
 		ptChild.add("name", temp->name);
-		ptChild.add("password", temp->name);
+		ptChild.add("password", temp->password);
 		ptChild.add("bankInfo", temp->STK);
 		pt.add_child("programData.userData.user", ptChild);
 		ptChild.clear();
@@ -946,7 +946,13 @@ DWORD WINAPI function_cal(LPVOID arg) {
 							{
 								list[listroom[i]].bookedList = temp;
 							}
+							date d4;
+
+							convertchargdatetoint(temp, d4);
+							d4 = nextday(d4);
+							convertdate(d4, temp);
 						}
+						cout << list[listroom[i]].bookedList;
 						priceroom = atoi(list[listroom[i]].price);
 						tien = (diseday + 1) * priceroom + tien;
 					}
@@ -968,87 +974,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 			}
 			break;
 		case 2:
-			if (featuresSwitch != 0) {
-				int size = 0;
-				int billcount = 0;
-				int flag = 0;
-				room* list = NULL;
-				bill* userBill = NULL;
-				int currentBillIndex = -1;
-				char* tempName = NULL;
-				size = strlen(trueUser->name);
-				tempName = new char[size + 1];
-				strcpy_s(tempName, size + 1, trueUser->name);
-				upperCase(tempName);
-				strCat(tempName, ".xml");
-				cout << tempName << endl;
-				readBillData(userBill, tempName, billcount);
-				char* billID = NULL;
-				client.Receive((char*)&size, sizeof(int), 0);
-				if (size == 0) break;
-				client.Receive((char*)&billID, size, 0);
-				for (int i = 0; i < billcount; i++) {
-					if (strcmp(userBill[i].billID, billID) == 0) {
-						currentBillIndex == i;
-						break;
-					}
-				}
-				if (currentBillIndex == -1) {
-					client.Send(&flag, sizeof(flag), 0);
-				}
-				else {
-					flag = 1;
-					client.Send(&flag, sizeof(flag), 0);
-					if (timeTL() - userBill[currentBillIndex].TTL >= 24 * 3600) {
-						flag = 0;
-						client.Send(&flag, sizeof(flag), 0);
-					}
-					else {
-						readHotelData(userBill[currentBillIndex].nameHotel, list);
-						date d1, d2;
-						char doub[] = "double";
-						char sing[] = "single";
-						convertchargdatetoint(userBill[currentBillIndex].dateIn, d1);
-						convertchargdatetoint(userBill[currentBillIndex].dateOut, d2);
-						int diseday = countNoOfDays(d1, d2);
-						for (int j = 0; j <= countNoOfDays(d1, d2); j++)
-						{
-							for (int i = 0; i < 10; i++) {
-								bookingDates* temp = list[i].book;
-								if (temp != NULL)
-								{
-									while (temp != NULL)
-									{
-										if (strcmp(temp->booked, userBill[currentBillIndex].dateIn) == 0)
-										{
-											list[i].sameday--;
-											break;
-										}
-										temp = temp->next;
-									}
-								}
-							}
-							date d;
-							convertchargdatetoint(userBill[currentBillIndex].dateIn, d);
-							d = nextday(d);
-							convertdate(d, userBill[currentBillIndex].dateIn);
-						}
-						for (int i = currentBillIndex; i < billcount - 1; i++) {
-							userBill[i].nameHotel = userBill[i + 1].nameHotel;
-							userBill[i].billID = userBill[i + 1].billID;
-							userBill[i].GhiChu = userBill[i + 1].GhiChu;
-							userBill[i].giaTien = userBill[i + 1].giaTien;
-							userBill[i].TTL = userBill[i + 1].TTL;
-							userBill[i].next = userBill[i + 1].next;
-							userBill[i].dateIn = userBill[i + 1].dateIn;
-							userBill[i].dateOut = userBill[i + 1].dateOut;
-						}
-						billcount--;
-						writeBillData(userBill, tempName);
-					}
-				}
-			}
-			break;
+			
 		case 3:
 			if (featuresSwitch != 0) {
 				client.Receive((char*)&featuresSwitch, sizeof(int), 0);
