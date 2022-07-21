@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<programData>
+    <hotelData>
+        <room>
+            <name>101</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for one person</description>
+            <price>30000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>102</name>
+            <type>double</type>
+            <date>01/01/2022</date>
+            <description>room for two people</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>103</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for one person</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>104</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for one person</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>105</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for one person</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>106</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for one person</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\single\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\single\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\single\\phongTam.jpeg</thirdPhoto>
+        </room>
+        <room>
+            <name>107</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for two people</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\double\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\double\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\double\\phongTam.jpg</thirdPhoto>
+        </room>
+        <room>
+            <name>108</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for two people</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\double\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\double\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\double\\phongTam.jpg</thirdPhoto>
+        </room>
+        <room>
+            <name>109</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for two people</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\double\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\double\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\double\\phongTam.jpg</thirdPhoto>
+        </room>
+        <room>
+            <name>110</name>
+            <type>single</type>
+            <date>01/01/2022</date>
+            <description>room for two people</description>
+            <price>50000</price>
+            <firstPhoto>photo\\hotelTwo\\double\\phongNgu.jpg</firstPhoto>
+            <secondPhoto>photo\\hotelTwo\\double\\phongKhach.jpg</secondPhoto>
+            <thirdPhoto>photo\\hotelTwo\\double\\phongTam.jpg</thirdPhoto>
+        </room>
+    </hotelData>
+</programData>

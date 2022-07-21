@@ -51,16 +51,6 @@
         <TTL>1658150726</TTL>
     </billData>
     <billData>
-        <billID>rocket24h_6</billID>
-        <hotelName>hotel</hotelName>
-        <dateIn>20/07/2022</dateIn>
-        <dateOut>20/07/2022</dateOut>
-        <notes>asd</notes>
-        <price>80000</price>
-        <subBill>101 104 </subBill>
-        <TTL>1658297801</TTL>
-    </billData>
-    <billData>
         <billID>rocket24h_7</billID>
         <hotelName>hotel</hotelName>
         <dateIn>02/07/2022</dateIn>
@@ -69,5 +59,15 @@
         <price>240000</price>
         <subBill>101 103 </subBill>
         <TTL>1658301008</TTL>
+    </billData>
+    <billData>
+        <billID>rocket24h_324</billID>
+        <hotelName>hotel</hotelName>
+        <dateIn>21/07/2022</dateIn>
+        <dateOut>22/07/2022</dateOut>
+        <notes>no</notes>
+        <price>100000</price>
+        <subBill>110 </subBill>
+        <TTL>1658384095</TTL>
     </billData>
 </programData>

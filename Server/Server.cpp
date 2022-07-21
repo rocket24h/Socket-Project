@@ -23,6 +23,7 @@ using namespace cv;
 #include "date.h"
 #include <ColorDlg.h>
 #include <fstream>
+#include <cstring>
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -256,6 +257,35 @@ void cutstring(char* s, bookingDates*& d)
 	}
 }
 
+void cutroom(char* s, bookingDates*& d)
+{
+	if (s == NULL) return;
+	if (strlen(s) != 0)
+	{
+		int i = 0;
+		while (i < strlen(s))
+		{
+			char* c = new char[4];
+			for (int j = 0; j < 3; j++)
+				c[j] = s[i + j];
+			c[3] = '\0';
+			if (d == NULL)
+			{
+				d = newdate(c);
+			}
+			else
+			{
+				bookingDates* temp = d;
+				while (temp->next != NULL)
+				{
+					temp = temp->next;
+				}
+				temp->next = newdate(c);
+			}
+			i = i + 4;
+		}
+	}
+}
 void readHotelData(const char* hotelname, room*& list)
 {
 	ptree pt;
@@ -427,7 +457,7 @@ void readUserData(const char* filename, user*& first)
 
 bool testClientInput(user* first, char* name) {
 	user* temp = first;
-	if (temp == NULL) return false;
+	if (temp == NULL || name == NULL) return false;
 	while (temp != NULL) {
 		if (strcmp(name, temp->name) == 0) return true;
 		temp = temp->next;
@@ -435,7 +465,7 @@ bool testClientInput(user* first, char* name) {
 	return false;
 }
 
-user* loginConfirm(user* first, char* name, char* pass) {
+user* loginConfirm(user* first, const char* name, const char* pass) {
 	user* temp = first;
 	if (temp == NULL) return NULL;
 	while (temp != NULL) {
@@ -496,7 +526,31 @@ void writeHotelData(const char* filename, room* roomList)
 	}
 	write_xml(filename, pt);
 }
-
+void deleteBill(bill*& pHead, bill*& deleteOne) {
+	bill* temp = pHead;
+	bill* previous = NULL;
+	while (temp->next != NULL) {
+		if (temp == deleteOne) {
+			if (temp != NULL) {
+				previous->next = temp->next;
+			}
+			else {
+				pHead = temp->next;
+			}
+			delete[] deleteOne->nameHotel;
+			delete[] deleteOne->billID;
+			delete[] deleteOne->dateIn;
+			delete[] deleteOne->dateOut;
+			delete[] deleteOne->GhiChu;
+			delete[] deleteOne->list;
+			delete deleteOne;
+			deleteOne = NULL;
+			break;
+		}
+		previous = temp;
+		temp = temp->next;
+	}
+}
 void addtail(bookingDates*& pHead, char* x)
 {
 	if (pHead == NULL)
@@ -522,15 +576,14 @@ DWORD WINAPI function_cal(LPVOID arg) {
 	client.Attach(*hConnected);
 	int TTL = 1000;
 	int number_continue = 1;
+	user* userList = NULL;
 	cout << "Da co mot client ket noi!" << endl;
 	user* user1 = new user;
 	user* trueUser = NULL;
 	int features;
 	int flag;
 	int featuresSwitch = 0;
-
-
-	//char* hotelname = NULL;
+	int makeSure = 1;
 	readUserData("userData.xml", userList);
 	do {
 		client.Receive((char*)&features, sizeof(int), 0);
@@ -556,18 +609,21 @@ DWORD WINAPI function_cal(LPVOID arg) {
 						client.Receive((char*)&buffer[i], tempSize, 0);
 					}
 					buffer[size] = '\0';
+					int makeSure = 1;
 					if (flag == 1 && testClientInput(userList, buffer)) {
 						bool checker = 1;
 						cout << "user existed" << endl;
+						client.Send(&makeSure, sizeof(int), 0);
 						client.Send(&checker, sizeof(checker), 0);
 						continue;
 					}
 					else {
 						bool checker = 0;
+						client.Send(&makeSure, sizeof(int), 0);
 						client.Send(&checker, sizeof(checker), 0);
 					}
 					switch (flag) {
-					case 1: user1->add(buffer, user1->name); // Phần này đáng ra phải có 1 hàm đọc xml rồi so sánh với cái username mà mình nhận được ổn thì mới cho cái flag di chuyển tiếp không thì báo lại cho bên client là userName có người xài rồi gửi lại đi
+					case 1: user1->add(buffer, user1->name); 
 						printf("%s \n", user1->name);
 						break;
 					case 2:user1->add(buffer, user1->password);
@@ -578,9 +634,22 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					default: break;
 					}
 					flag++;
+					if (flag == 4) {
+						user* temp = createData(user1->name, user1->password, user1->STK);
+						insertData(userList, temp);
+						writeUserData("userData.xml", userList);
+					}
 				}
-				insertData(userList, createData(user1->name, user1->password, user1->STK));
-				writeUserData("userData.xml", userList);
+				char* dummyValue = NULL, *userName = NULL;
+				int billID = 0;
+				client.Receive((char*)&billID, sizeof(int), 0);
+				//cout << billID << endl;
+				dummyValue = convertString(to_string(billID));
+				strCat(userName, user1->name);
+				upperCase(userName);
+				strCat(userName, ".xml");
+				cout << userName << " " << dummyValue << endl;
+				writeBillData(createBill(dummyValue, dummyValue, dummyValue, dummyValue, dummyValue, dummyValue, billID, billID), userName);
 			}
 			else {
 				//Chuc nang tra cuu
@@ -718,7 +787,10 @@ DWORD WINAPI function_cal(LPVOID arg) {
 		case 1:
 			TTL++;
 			if (featuresSwitch == 0) {
+				int checker = 1;
 				flag = 1;
+				delete user1;
+				user1 = new user;
 				while (flag <= 2) {
 					int size = 0;
 					int tempSize = 10;
@@ -749,14 +821,14 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				}
 				trueUser = loginConfirm(userList, user1->name, user1->password);
 				if (trueUser == NULL) {
-					bool checker = 0;
-					client.Send(&checker, sizeof(bool), 0);
+					checker = 0;
 				}
 				else {
-					bool checker = 1;
+					checker = 1;
 					featuresSwitch = 1;
-					client.Send(&checker, sizeof(bool), 0);
 				}
+				client.Send(&makeSure, sizeof(int), 0);
+				client.Send(&checker, sizeof(int), 0);
 			}
 			else {
 				// Phan code cho dat phong
@@ -882,6 +954,8 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					d = nextday(d);
 					convertdate(d, t);
 				}
+				int makeSure = 1;
+				client.Send(&makeSure, sizeof(int), 0);
 				for (int i = 0; i < 10; i++)
 				{
 
@@ -909,9 +983,8 @@ DWORD WINAPI function_cal(LPVOID arg) {
 				long int tien = 0;
 				long int priceroom;
 				char* bookedRooms = NULL;
-				billCount += 1;
-				char* userBillID = new char[100];
-				_itoa(billCount, userBillID, 10);
+				//billCount += 1;
+				
 				if (numroom == 0)
 				{
 					cout << "Khach hang khong dat phong\n";
@@ -956,6 +1029,9 @@ DWORD WINAPI function_cal(LPVOID arg) {
 						priceroom = atoi(list[listroom[i]].price);
 						tien = (diseday + 1) * priceroom + tien;
 					}
+					int billID = 0;
+					client.Receive((char*)&billID, sizeof(int), 0);
+					char* userBillID = convertString(to_string(billID));
 					char* tempID = user1->name;
 					strCat(tempID, "_");
 					strCat(tempID, userBillID);
@@ -965,7 +1041,7 @@ DWORD WINAPI function_cal(LPVOID arg) {
 					client.Send(&tien, sizeof(size), 0);
 					int tTL = timeTL();
 					bill* tmpbill = createBill(tempID, hotelName, hoadon.list, hoadon.dateIn, hoadon.dateOut, note, tien, tTL);
-					cout << tmpbill->billID << " " << tmpbill->nameHotel << " " << tmpbill->list << " " << tmpbill->dateIn << " " << tmpbill->dateOut << " " << tmpbill->GhiChu << " " << tmpbill->giaTien << endl;
+					
 					insertBill(totalBill, tmpbill);
 				}
 				cout << "Tien phong da dat " << tien;
@@ -974,13 +1050,125 @@ DWORD WINAPI function_cal(LPVOID arg) {
 			}
 			break;
 		case 2:
-			
+			if (featuresSwitch != 0) {
+				int size = 0;
+				int billcount = 0;
+				int flag = 0;
+				room* list = NULL;
+				bill* userBill = NULL;
+				bill* currentBill = NULL;
+				char* tempName = NULL;
+				size = strlen(trueUser->name);
+				tempName = new char[size + 1];
+				strcpy_s(tempName, size + 1, trueUser->name);
+				upperCase(tempName);
+				strCat(tempName, ".xml");
+				cout << tempName << endl;
+				readBillData(userBill, tempName, billcount);
+				char* billID = NULL;
+				client.Receive((char*)&size, sizeof(int), 0);
+				if (size == 0) break;
+				billID = new char[size + 1];
+				client.Receive((char*)&billID[0], size, 0);
+				billID[size] = '\0';
+				bill* temp = userBill;
+				cout << billID << endl;
+				while (temp != NULL) {
+					if (strcmp(temp->billID, billID) == 0) {
+						currentBill = temp;
+						break;
+					}
+					temp = temp->next;
+				}
+				if (currentBill == NULL) {
+					flag = 0;
+					client.Send(&flag, sizeof(flag), 0);
+				}
+				else {
+					flag = 1;
+					client.Send(&flag, sizeof(flag), 0);
+					if (timeTL() - currentBill->TTL >= 24 * 3600) {
+						flag = 0;
+						client.Send(&flag, sizeof(flag), 0);
+					}
+					else {
+						client.Send(&flag, sizeof(flag), 0);
+						char* tempHotel = NULL;
+						size = strlen(currentBill->nameHotel);
+						tempHotel = new char[size + 1];
+						strcpy_s(tempHotel, size + 1, currentBill->nameHotel);
+
+						strCat(tempHotel, ".xml");
+						upperCase(tempHotel);
+						cout << tempHotel << endl;
+						cout << tempName << endl;
+						readHotelData(tempHotel, list);
+
+						//Phan update ngay 
+						char* in = currentBill->dateIn;
+						char* out = currentBill->dateOut;
+
+						bookingDates* listbooked = NULL;
+						cout << in << " " << out;
+						cutroom(currentBill->list, listbooked);
+
+						date din, dout;
+						convertchargdatetoint(in, din);
+						convertchargdatetoint(out, dout);
+						int disday = countNoOfDays(din, dout);
+						bookingDates* t = listbooked;
+						while (t)
+						{
+
+							int i = 0;
+							while (i < 10)
+							{
+								if (strcmp(t->booked, list[i].name) == 0)
+								{
+									break;
+								}
+								i++;
+							}
+
+							t = t->next;
+
+							string datebook;
+							datebook = list[i].bookedList;
+
+							int indexd = datebook.find(in);
+
+							for (int j = 0; j <= disday; j++)
+							{
+								for (int k = 0; k < 11; k++)
+								{
+									datebook.erase(datebook.begin() + indexd);
+								}
+
+							}
+
+							list[i].bookedList = convertString(datebook);
+						}
+
+						cout << billcount << endl;
+						cout << "haha" << endl;
+						cout << currentBill->billID << endl;
+						deleteBill(userBill, currentBill);
+						temp = userBill;
+						while (temp != NULL) {
+							cout << temp->billID << " ";
+							temp = temp->next;
+						}
+						writeBillData(userBill, tempName);
+						writeHotelData(tempHotel, list);
+					}
+				}
+			}
+			break;
 		case 3:
 			if (featuresSwitch != 0) {
-				client.Receive((char*)&featuresSwitch, sizeof(int), 0);
-				delete trueUser;
-				delete user1;
+				featuresSwitch = 0;
 				trueUser = NULL;
+				delete user1;
 				user1 = new user;
 			}
 			break;
